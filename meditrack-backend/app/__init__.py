@@ -1,1 +1,0 @@
-# MediTrack AI Backend
