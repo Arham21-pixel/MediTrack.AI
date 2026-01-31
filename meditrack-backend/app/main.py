@@ -13,10 +13,10 @@ from app.routes import auth, prescription, medicine, reports, notifications
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
-    print(f"🚀 Starting {settings.APP_NAME}...")
+    print(f"Starting {settings.APP_NAME}...")
     yield
     # Shutdown
-    print(f"👋 Shutting down {settings.APP_NAME}...")
+    print(f"Shutting down {settings.APP_NAME}...")
 
 
 app = FastAPI(

@@ -127,11 +127,36 @@ ALTER TABLE health_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_history ENABLE ROW LEVEL SECURITY;
 
--- Create policies (users can only access their own data)
--- Note: These assume you're using Supabase Auth. Adjust if using custom auth.
+-- Create policies for API access using service role or anon key
+-- These policies allow the API to perform CRUD operations
 
--- For development/testing, you might want to allow all access
--- In production, implement proper RLS policies based on your auth system
+-- Users table policies
+CREATE POLICY "Enable all access for users table" ON users
+    FOR ALL USING (true) WITH CHECK (true);
+
+-- Prescriptions table policies  
+CREATE POLICY "Enable all access for prescriptions table" ON prescriptions
+    FOR ALL USING (true) WITH CHECK (true);
+
+-- Medicines table policies
+CREATE POLICY "Enable all access for medicines table" ON medicines
+    FOR ALL USING (true) WITH CHECK (true);
+
+-- Medicine logs table policies
+CREATE POLICY "Enable all access for medicine_logs table" ON medicine_logs
+    FOR ALL USING (true) WITH CHECK (true);
+
+-- Health reports table policies
+CREATE POLICY "Enable all access for health_reports table" ON health_reports
+    FOR ALL USING (true) WITH CHECK (true);
+
+-- Notification settings table policies
+CREATE POLICY "Enable all access for notification_settings table" ON notification_settings
+    FOR ALL USING (true) WITH CHECK (true);
+
+-- Notification history table policies
+CREATE POLICY "Enable all access for notification_history table" ON notification_history
+    FOR ALL USING (true) WITH CHECK (true);
 
 -- Function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

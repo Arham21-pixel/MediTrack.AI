@@ -20,7 +20,7 @@ class Database:
                settings.SUPABASE_URL == "your-supabase-url" or \
                settings.SUPABASE_KEY == "your-supabase-anon-key":
                 cls._mock_mode = True
-                print("⚠️ Supabase not configured - running in mock mode")
+                print("[WARNING] Supabase not configured - running in mock mode")
                 return None
             try:
                 cls._instance = create_client(
@@ -28,7 +28,7 @@ class Database:
                     settings.SUPABASE_KEY
                 )
             except Exception as e:
-                print(f"⚠️ Supabase connection failed: {e} - running in mock mode")
+                print(f"[WARNING] Supabase connection failed: {e} - running in mock mode")
                 cls._mock_mode = True
                 return None
         return cls._instance
