@@ -46,5 +46,5 @@ Backend:
 
 ## Team (names, roles, contacts)
 Team: Rising High
-- Priyal Khunia — Frontend + UI/UX — Contact: priyal.khunia@risinghigh.dev
-- Arham Boonlia — Backend + Database — Contact: arham.boonlia@risinghigh.dev
+- Arham Boonlia — Backend + Database — Contact: 7014112651
+- Priyal Khunia — Frontend + UI/UX — Contact: 7972645656
