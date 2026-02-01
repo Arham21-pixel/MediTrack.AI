@@ -55,10 +55,10 @@ export function Navbar() {
                 </div>
 
                 <div className="hidden md:flex items-center gap-3">
-                    <Link href="#login" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <Link href="/login" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
                         Log in
                     </Link>
-                    <Link href="/dashboard">
+                    <Link href="/signup">
                         <Button size="sm" className="rounded-full bg-lime-400 hover:bg-lime-500 text-black font-semibold shadow-[0_0_20px_rgba(163,230,53,0.4)] border-none">
                             Get Started
                         </Button>
@@ -95,8 +95,10 @@ export function Navbar() {
                                 </Link>
                             ))}
                             <div className="flex flex-col gap-3 mt-4">
-                                <Button variant="secondary" className="w-full justify-center">Log in</Button>
-                                <Link href="/dashboard" className="w-full">
+                                <Link href="/login" className="w-full">
+                                    <Button variant="secondary" className="w-full justify-center">Log in</Button>
+                                </Link>
+                                <Link href="/signup" className="w-full">
                                     <Button className="w-full justify-center">Get Started</Button>
                                 </Link>
                             </div>

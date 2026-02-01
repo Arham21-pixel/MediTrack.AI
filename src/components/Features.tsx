@@ -1,7 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ScanText, Clock, FileSearch, CalendarRange, Bell, ShieldCheck } from 'lucide-react';
+import { ScanText, Clock, FileSearch, CalendarRange, Bell, ShieldCheck, ArrowRight } from 'lucide-react';
+import { CardContainer, CardBody, CardItem } from '@/components/ui/3d-card';
+import Link from 'next/link';
 
 const features = [
     {
@@ -77,46 +79,55 @@ export function Features() {
                                 </p>
                             </div>
                             <div className="mt-8">
-                                <span className="inline-flex items-center gap-2 text-sm font-bold text-lime-600 dark:text-lime-400 group-hover:gap-3 transition-all cursor-pointer">
-                                    Try it out <ShieldCheck size={16} />
-                                </span>
+                                <Link href="/signup" className="inline-flex items-center gap-2 text-sm font-bold text-lime-600 dark:text-lime-400 hover:gap-3 transition-all cursor-pointer">
+                                    Try it out <ArrowRight size={16} />
+                                </Link>
                             </div>
                         </div>
                     </motion.div>
 
                     {/* Feature 2 */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                        className="md:col-span-1 bg-white dark:bg-neutral-900 rounded-[2rem] p-8 border border-gray-100 dark:border-neutral-800 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
-                    >
-                        <div className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-6">
-                            <Clock size={24} />
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Smart Reminders</h3>
-                            <p className="text-gray-600 dark:text-gray-400 text-sm">Never miss a dose with intelligent, adaptive notifications.</p>
-                        </div>
-                    </motion.div>
+                    <CardContainer className="md:col-span-1" containerClassName="py-0">
+                        <CardBody className="bg-white dark:bg-neutral-900 rounded-[2rem] p-8 border border-gray-100 dark:border-neutral-800 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-auto w-full">
+                            <CardItem translateZ={50}>
+                                <div className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-6">
+                                    <Clock size={24} />
+                                </div>
+                            </CardItem>
+                            <div>
+                                <CardItem translateZ={40}>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Smart Reminders</h3>
+                                </CardItem>
+                                <CardItem translateZ={30}>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm">Never miss a dose with intelligent, adaptive notifications.</p>
+                                </CardItem>
+                            </div>
+                        </CardBody>
+                    </CardContainer>
 
                     {/* Feature 3 */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="md:col-span-1 bg-white dark:bg-neutral-900 rounded-[2rem] p-8 border border-gray-100 dark:border-neutral-800 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
-                    >
-                        <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-6">
-                            <FileSearch size={24} />
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Report Analysis</h3>
-                            <p className="text-gray-600 dark:text-gray-400 text-sm">Understand your lab results in plain, simple English.</p>
-                        </div>
-                    </motion.div>
+                    <CardContainer className="md:col-span-1" containerClassName="py-0">
+                        <CardBody className="bg-white dark:bg-neutral-900 rounded-[2rem] p-8 border border-gray-100 dark:border-neutral-800 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-auto w-full">
+                            <CardItem translateZ={50}>
+                                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-6">
+                                    <FileSearch size={24} />
+                                </div>
+                            </CardItem>
+                            <div>
+                                <CardItem translateZ={40}>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Report Analysis</h3>
+                                </CardItem>
+                                <CardItem translateZ={30}>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm">Understand your lab results in plain, simple English.</p>
+                                </CardItem>
+                                <CardItem translateZ={20} className="mt-4">
+                                    <Link href="/signup" className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-400 hover:gap-3 transition-all cursor-pointer">
+                                        Try it out <ArrowRight size={14} />
+                                    </Link>
+                                </CardItem>
+                            </div>
+                        </CardBody>
+                    </CardContainer>
 
                     {/* Feature 4 - Dark Card */}
                     <motion.div

@@ -19,9 +19,27 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = ""
     SUPABASE_KEY: str = ""
     
-    # OpenAI
-    OPENAI_API_KEY: str = ""
-    OPENAI_MODEL: str = "gpt-4-turbo-preview"
+    # AI Provider (OpenAI-compatible: OpenAI, NuGen, OpenRouter, etc.)
+    OPENAI_API_KEY: str = "sk-v1-fa487607a6aef68d6b3b7157f188498d862c3c14d7165f4fe34d8265160772d7"
+    OPENAI_BASE_URL: str = "https://go.fastrouter.ai/api/v1"  # Leave empty for OpenAI, or set custom URL for NuGen/OpenRouter
+    OPENAI_MODEL: str = "gpt-4o-mini"  # Default model
+    
+    # Azure OpenAI
+    AZURE_OPENAI_ENDPOINT: str = ""
+    AZURE_OPENAI_KEY: str = ""
+    AZURE_OPENAI_API_KEY: str = ""
+    AZURE_DEPLOYMENT_NAME: str = "gpt-4o"
+    AZURE_API_VERSION: str = "2024-02-15-preview"
+    AI_PROVIDER: str = "azure"  # "openai", "azure", or "fastrouter"
+    
+    # Google Gemini (Vision AI - Free tier available)
+    GEMINI_API_KEY: str = ""
+    
+    # Email Configuration (Resend API)
+    RESEND_API_KEY: str = ""
+    RESEND_FROM_EMAIL: str = "onboarding@resend.dev"
+    EMAIL_FROM_NAME: str = "MediTrack"
+    DEFAULT_NOTIFICATION_EMAIL: str = ""
     
     # Twilio (SMS/WhatsApp)
     TWILIO_ACCOUNT_SID: str = ""

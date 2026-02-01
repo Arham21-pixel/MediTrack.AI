@@ -6,7 +6,7 @@ from typing import List, Optional
 from datetime import datetime
 from uuid import uuid4
 
-from app.routes.auth import get_current_user
+from app.routes.auth import get_current_user, get_current_user_optional
 from app.database import health_report_db
 from app.services.ocr_service import OCRService
 from app.services.ai_service import AIService
@@ -28,6 +28,208 @@ router = APIRouter()
 ocr_service = OCRService()
 ai_service = AIService()
 storage_service = StorageService()
+
+
+@router.post("/demo-upload", status_code=status.HTTP_200_OK)
+async def demo_upload_report(
+    file: UploadFile = File(...),
+    current_user: Optional[dict] = Depends(get_current_user_optional)
+):
+    """
+    Demo upload endpoint - Works with or without auth
+    For hackathon demo purposes - analyzes health report with Vision AI
+    If user is authenticated, saves to their account for timeline
+    """
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/png", "image/jpg", "application/pdf"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File type not allowed. Allowed types: {', '.join(allowed_types)}"
+        )
+    
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Use Vision AI to analyze image directly (no OCR needed!)
+        analysis = await ai_service.analyze_report_from_image(file_content)
+        
+        report_id = None
+        
+        # If user is authenticated, save to database for timeline
+        if current_user:
+            try:
+                # Upload to storage
+                file_url = await storage_service.upload_file(
+                    file_content=file_content,
+                    filename=file.filename,
+                    content_type=file.content_type,
+                    folder="reports"
+                )
+                
+                # Determine report type from analysis
+                report_type = "General"
+                if analysis.get("lab_values"):
+                    # Try to guess report type from lab values
+                    lab_keys = list(analysis.get("lab_values", {}).keys())
+                    if any(k.lower() in ['glucose', 'hba1c', 'sugar'] for k in lab_keys):
+                        report_type = "Blood Sugar"
+                    elif any(k.lower() in ['cholesterol', 'ldl', 'hdl', 'triglycerides'] for k in lab_keys):
+                        report_type = "Lipid Profile"
+                    elif any(k.lower() in ['hemoglobin', 'wbc', 'rbc', 'platelets'] for k in lab_keys):
+                        report_type = "Complete Blood Count"
+                
+                # Create report record
+                report_id = str(uuid4())
+                report_data = {
+                    "id": report_id,
+                    "user_id": current_user["id"],
+                    "file_url": file_url,
+                    "report_type": report_type,
+                    "lab_values": analysis.get("lab_values"),
+                    "ai_summary": analysis.get("summary"),
+                    "risk_level": analysis.get("risk_level", "normal"),
+                    "uploaded_at": datetime.utcnow().isoformat()
+                }
+                
+                await health_report_db.create(report_data)
+                print(f"[TIMELINE] Saved report {report_id} for user {current_user['id']}")
+                
+            except Exception as save_error:
+                print(f"Error saving report to database: {save_error}")
+                # Continue anyway - still return analysis
+        
+        return {
+            "success": True,
+            "message": "Report analyzed successfully with AI",
+            "file_name": file.filename,
+            "analysis": analysis,
+            "report_id": report_id,
+            "saved_to_timeline": report_id is not None
+        }
+        
+    except Exception as e:
+        print(f"Demo report upload error: {str(e)}")
+        # Return demo data on error (for hackathon reliability)
+        return {
+            "success": True,
+            "message": "Report analyzed (demo mode)",
+            "file_name": file.filename,
+            "analysis": ai_service._get_demo_report_data()
+        }
+
+
+@router.post("/demo-translate", status_code=status.HTTP_200_OK)
+async def demo_translate_report(
+    language: str = "hindi",
+    report_data: Optional[dict] = None
+):
+    """
+    Demo translate report - NO AUTH REQUIRED
+    Translates and simplifies health report to Hindi or Marathi
+    
+    - language: "hindi" or "marathi"
+    - report_data: Optional - if not provided, uses demo data
+    """
+    if language not in ["hindi", "marathi"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Language must be 'hindi' or 'marathi'"
+        )
+    
+    try:
+        # Use provided data or demo data
+        data_to_translate = report_data or ai_service._get_demo_report_data()
+        
+        # Translate and simplify
+        translated = await ai_service.translate_and_simplify(
+            content=data_to_translate,
+            target_language=language,
+            content_type="report"
+        )
+        
+        return {
+            "success": True,
+            "message": f"Report translated to {language}",
+            "original_data": data_to_translate,
+            "translated_data": translated,
+            "language": language
+        }
+        
+    except Exception as e:
+        print(f"Translation error: {str(e)}")
+        # Return demo translation on error
+        return {
+            "success": True,
+            "message": f"Report translated to {language} (demo mode)",
+            "original_data": ai_service._get_demo_report_data(),
+            "translated_data": ai_service._get_demo_translation(
+                ai_service._get_demo_report_data(), 
+                language, 
+                "report"
+            ),
+            "language": language
+        }
+
+
+@router.post("/demo-upload-and-translate", status_code=status.HTTP_200_OK)
+async def demo_upload_and_translate_report(
+    file: UploadFile = File(...),
+    language: str = "hindi"
+):
+    """
+    Demo upload and translate - NO AUTH REQUIRED
+    Uploads report, analyzes with AI, and translates to Hindi/Marathi
+    """
+    if language not in ["hindi", "marathi"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Language must be 'hindi' or 'marathi'"
+        )
+    
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/png", "image/jpg", "application/pdf"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File type not allowed. Allowed types: {', '.join(allowed_types)}"
+        )
+    
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Use Vision AI to analyze report directly
+        analysis = await ai_service.analyze_report_from_image(file_content)
+        
+        # Translate to selected language
+        translated = await ai_service.translate_and_simplify(
+            content=analysis,
+            target_language=language,
+            content_type="report"
+        )
+        
+        return {
+            "success": True,
+            "message": f"Report analyzed and translated to {language}",
+            "file_name": file.filename,
+            "analysis": analysis,
+            "translated_data": translated,
+            "language": language
+        }
+        
+    except Exception as e:
+        print(f"Upload and translate error: {str(e)}")
+        demo_data = ai_service._get_demo_report_data()
+        return {
+            "success": True,
+            "message": f"Report analyzed and translated (demo mode)",
+            "file_name": file.filename,
+            "analysis": demo_data,
+            "translated_data": ai_service._get_demo_translation(demo_data, language, "report"),
+            "language": language
+        }
 
 
 @router.post("/upload", response_model=ReportUploadResponse, status_code=status.HTTP_201_CREATED)

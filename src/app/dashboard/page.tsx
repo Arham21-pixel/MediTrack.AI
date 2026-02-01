@@ -1,20 +1,51 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { StatsOverview } from '@/components/dashboard/home/StatsOverview';
 import { DailyMedicineSchedule } from '@/components/dashboard/home/DailyMedicineSchedule';
 import { QuickActions } from '@/components/dashboard/home/QuickActions';
 import { RecentAlerts } from '@/components/dashboard/home/RecentAlerts';
 import { AdherenceRing } from '@/components/dashboard/home/AdherenceRing';
 import { FloatingActionButton } from '@/components/dashboard/FloatingActionButton';
+import { TimelinePreview } from '@/components/dashboard/home/TimelinePreview';
+import { FamilyMedicineTracker } from '@/components/dashboard/home/FamilyMedicineTracker';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function DashboardPage() {
+    const { user } = useAuth();
+    const [takenCount, setTakenCount] = useState(0);
+    const [totalCount, setTotalCount] = useState(0);
+
+    // Calculate adherence percentage from actual medicine intake
+    const adherencePercentage = totalCount > 0 ? Math.round((takenCount / totalCount) * 100) : 0;
+
+    // Callback to receive schedule changes from DailyMedicineSchedule
+    const handleScheduleChange = useCallback((taken: number, total: number) => {
+        setTakenCount(taken);
+        setTotalCount(total);
+    }, []);
+
+    // Get user's first name
+    const getFirstName = () => {
+        if (!user?.name) return '';
+        return user.name.split(' ')[0];
+    };
+
+    // Get time-based greeting
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good Morning';
+        if (hour < 17) return 'Good Afternoon';
+        return 'Good Evening';
+    };
+
     return (
         <div className="space-y-8 relative pb-24">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Good Morning, John</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{getGreeting()}, {getFirstName()}</h1>
                     <p className="text-gray-500 dark:text-gray-400">Here's your health overview for today.</p>
                 </div>
                 <div className="text-sm font-medium bg-white dark:bg-neutral-900 px-4 py-2 rounded-full shadow-sm text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-neutral-800 self-start md:self-auto transition-colors">
@@ -23,7 +54,7 @@ export default function DashboardPage() {
             </div>
 
             {/* 1. Stats Overview (Top) */}
-            <StatsOverview />
+            <StatsOverview takenCount={takenCount} totalCount={totalCount} />
 
             {/* 2. Main Grid: Schedule & Quick Actions/Alerts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -34,29 +65,9 @@ export default function DashboardPage() {
                     transition={{ delay: 0.1 }}
                     className="lg:col-span-2 space-y-6"
                 >
-                    <DailyMedicineSchedule />
-
-                    {/* Placeholder for Timeline Preview - Keeping it simpler for now */}
-                    <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-neutral-800 transition-colors">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Health Timeline</h2>
-                            <button className="text-sm font-bold text-lime-600 dark:text-lime-400 hover:underline">View All</button>
-                        </div>
-                        <div className="space-y-0">
-                            {[1, 2].map((item, i) => (
-                                <div key={i} className="flex items-center gap-4 p-4 border-b border-gray-50 dark:border-neutral-800 last:border-0 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors cursor-pointer rounded-xl">
-                                    <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
-                                        LAB
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="font-bold text-gray-900 dark:text-gray-100 text-sm">Blood Test Report</div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">Analyzed by AI • 2 hours ago</div>
-                                    </div>
-                                    <div className="text-xs font-medium text-gray-400">View</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <DailyMedicineSchedule onScheduleChange={handleScheduleChange} />
+                    <FamilyMedicineTracker />
+                    <TimelinePreview />
                 </motion.div>
 
                 {/* Right Column: Quick Actions & Alerts & Adherence (1 col wide) */}
@@ -66,7 +77,7 @@ export default function DashboardPage() {
                     transition={{ delay: 0.2 }}
                     className="space-y-6"
                 >
-                    <AdherenceRing percentage={92} />
+                    <AdherenceRing percentage={adherencePercentage} takenCount={takenCount} totalCount={totalCount} />
                     <QuickActions />
                     <RecentAlerts />
                 </motion.div>

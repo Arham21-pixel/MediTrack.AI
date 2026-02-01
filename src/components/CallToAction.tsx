@@ -33,9 +33,11 @@ export function CallToAction() {
                                     Start Free – Upload Prescription
                                 </Button>
                             </Link>
-                            <Button variant="outline" size="lg" className="border-lime-800 text-lime-900 hover:bg-lime-600/10 w-full sm:w-auto">
-                                Schedule Demo
-                            </Button>
+                            <Link href="/dashboard" className="w-full sm:w-auto">
+                                <Button variant="outline" size="lg" className="border-lime-800 text-lime-900 hover:bg-lime-600/10 w-full sm:w-auto">
+                                    Schedule Demo
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                 </motion.div>

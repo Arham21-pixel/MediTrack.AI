@@ -4,8 +4,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { motion } from 'framer-motion';
 import { ArrowRight, Upload, PlayCircle, Activity } from 'lucide-react';
+import { FlipWords } from '@/components/ui/flip-words';
 
 export function Hero() {
+    const flipWords = ["Prescriptions", "Lab Reports", "Health Data", "Medications"];
+    
     return (
         <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden bg-white dark:bg-black transition-colors duration-500">
             {/* Minimalist Background Gradients */}
@@ -35,10 +38,8 @@ export function Hero() {
                         transition={{ duration: 0.5, delay: 0.1 }}
                         className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.95] mb-8"
                     >
-                        Understand Health. <br className="hidden md:block" />
-                        <span className="bg-clip-text text-transparent bg-gradient-to-b from-gray-900 to-gray-500 dark:from-white dark:to-gray-500">
-                            Live Better.
-                        </span>
+                        Understand Your <br className="hidden md:block" />
+                        <FlipWords words={flipWords} className="text-lime-500" />
                     </motion.h1>
 
                     <motion.p

@@ -4,18 +4,25 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, FileText, CalendarClock, Users, Settings, LogOut, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-    { icon: FileText, label: 'Prescriptions', href: '/dashboard/prescriptions' },
-    { icon: FileText, label: 'Reports', href: '/dashboard/reports' }, // Added Reports
-    { icon: CalendarClock, label: 'Timeline', href: '/dashboard/timeline' },
-    { icon: Users, label: 'Family', href: '/dashboard/family' },
-    { icon: Settings, label: 'Settings', href: '/dashboard/settings' }, // Profile is effectively here or we can add a dedicated one
+    { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard', guestAllowed: true },
+    { icon: FileText, label: 'Prescriptions', href: '/dashboard/prescriptions', guestAllowed: true },
+    { icon: FileText, label: 'Reports', href: '/dashboard/reports', guestAllowed: false },
+    { icon: CalendarClock, label: 'Timeline', href: '/dashboard/timeline', guestAllowed: false },
+    { icon: Users, label: 'Family', href: '/dashboard/family', guestAllowed: false },
+    { icon: Settings, label: 'Settings', href: '/dashboard/settings', guestAllowed: false },
 ];
 
 export function Sidebar() {
     const pathname = usePathname();
+    const { isAuthenticated } = useAuth();
+
+    // Filter nav items based on authentication status
+    const visibleNavItems = isAuthenticated 
+        ? navItems 
+        : navItems.filter(item => item.guestAllowed);
 
     return (
         <aside className="fixed left-0 top-0 h-screen w-20 bg-white dark:bg-neutral-900 border-r border-gray-100 dark:border-neutral-800 flex flex-col items-center py-6 z-40 hidden md:flex shadow-sm transition-colors duration-300">
@@ -24,7 +31,7 @@ export function Sidebar() {
             </Link>
 
             <nav className="flex-1 w-full flex flex-col items-center gap-4">
-                {navItems.map((item) => {
+                {visibleNavItems.map((item) => {
                     const isActive = pathname === item.href;
                     return (
                         <Link
@@ -49,9 +56,15 @@ export function Sidebar() {
                 })}
             </nav>
 
-            <Link href="/" className="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors mt-auto" title="Log Out">
-                <LogOut size={20} />
-            </Link>
+            {isAuthenticated ? (
+                <Link href="/" className="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors mt-auto" title="Log Out">
+                    <LogOut size={20} />
+                </Link>
+            ) : (
+                <Link href="/signup" className="w-10 h-10 rounded-xl flex items-center justify-center bg-lime-100 text-lime-700 hover:bg-lime-200 transition-colors mt-auto" title="Sign Up">
+                    <Activity size={20} />
+                </Link>
+            )}
         </aside>
     );
 }

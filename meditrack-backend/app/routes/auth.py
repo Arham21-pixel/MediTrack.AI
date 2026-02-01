@@ -36,6 +36,9 @@ class UserProfileResponse(BaseModel):
     email: str
     name: Optional[str] = None
     phone: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    blood_type: Optional[str] = None
+    allergies: Optional[str] = None
     created_at: datetime
 
 
@@ -100,6 +103,19 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     return user
 
 
+async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))):
+    """Get current user from token, but don't raise error if not authenticated"""
+    if credentials is None:
+        return None
+    
+    token_data = decode_token(credentials.credentials)
+    if token_data is None:
+        return None
+    
+    user = await user_db.get_by_id(token_data.user_id)
+    return user
+
+
 # Routes
 @router.post("/signup", response_model=Token, status_code=status.HTTP_201_CREATED)
 async def signup(request: SignupRequest):
@@ -148,25 +164,35 @@ async def login(request: LoginRequest):
     """
     Authenticate user and return token
     """
+    print(f"[AUTH] Login attempt for email: {request.email}")
+    
     # Get user by email
     user = await user_db.get_by_email(request.email)
     if not user:
+        print(f"[AUTH] User not found: {request.email}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
         )
     
+    print(f"[AUTH] User found: {user.get('email')}, checking password...")
+    
     # Verify password
     if not verify_password(request.password, user.get("hashed_password", "")):
+        print(f"[AUTH] Password verification failed for {request.email}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
         )
+    
+    print(f"[AUTH] Login successful for {request.email}, creating token...")
     
     # Create access token
     access_token = create_access_token(
         data={"sub": user["id"], "email": user["email"]}
     )
+    
+    print(f"[AUTH] Token created for {request.email}")
     
     return Token(access_token=access_token, token_type="bearer")
 
@@ -181,6 +207,9 @@ async def get_current_user_profile(current_user: dict = Depends(get_current_user
         email=current_user["email"],
         name=current_user.get("name"),
         phone=current_user.get("phone"),
+        date_of_birth=current_user.get("date_of_birth"),
+        blood_type=current_user.get("blood_type"),
+        allergies=current_user.get("allergies"),
         created_at=current_user.get("created_at", datetime.utcnow())
     )
 
@@ -193,53 +222,97 @@ async def logout(current_user: dict = Depends(get_current_user)):
     return {"message": "Successfully logged out", "user_id": current_user["id"]}
 
 
+class ProfileUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    blood_type: Optional[str] = None
+    allergies: Optional[str] = None
+
+
 @router.put("/profile", response_model=UserProfileResponse)
 async def update_profile(
-    name: Optional[str] = None,
-    phone: Optional[str] = None,
+    request: ProfileUpdateRequest,
     current_user: dict = Depends(get_current_user)
 ):
     """
     Update user profile
+    Only updates fields that are provided and not empty
     """
+    import sys
+    print(f"[DEBUG] Profile update request: {request}", flush=True)
+    print(f"[DEBUG] Current user: {current_user.get('id')}", flush=True)
+    
     update_data = {}
-    if name is not None:
-        update_data["name"] = name
-    if phone is not None:
-        update_data["phone"] = phone
+    # Only update if value is provided and not an empty string
+    if request.name is not None and request.name.strip():
+        update_data["name"] = request.name.strip()
+    if request.phone is not None and request.phone.strip():
+        update_data["phone"] = request.phone.strip()
+    if request.date_of_birth is not None and request.date_of_birth.strip():
+        update_data["date_of_birth"] = request.date_of_birth.strip()
+    if request.blood_type is not None and request.blood_type.strip():
+        update_data["blood_type"] = request.blood_type.strip()
+    if request.allergies is not None and request.allergies.strip():
+        update_data["allergies"] = request.allergies.strip()
+    
+    print(f"[DEBUG] Update data: {update_data}", flush=True)
     
     if update_data:
-        updated_user = await user_db.update(current_user["id"], update_data)
-        if updated_user:
-            current_user.update(update_data)
+        try:
+            updated_user = await user_db.update(current_user["id"], update_data)
+            print(f"[DEBUG] Updated user result: {updated_user}")
+            if updated_user:
+                # Use the updated user data from database
+                return UserProfileResponse(
+                    id=updated_user["id"],
+                    email=updated_user["email"],
+                    name=updated_user.get("name"),
+                    phone=updated_user.get("phone"),
+                    date_of_birth=updated_user.get("date_of_birth"),
+                    blood_type=updated_user.get("blood_type"),
+                    allergies=updated_user.get("allergies"),
+                    created_at=updated_user.get("created_at", datetime.utcnow())
+                )
+        except Exception as e:
+            print(f"[ERROR] Failed to update profile: {e}")
+            raise
     
+    # Return current user data if no updates were made
     return UserProfileResponse(
         id=current_user["id"],
         email=current_user["email"],
         name=current_user.get("name"),
         phone=current_user.get("phone"),
+        date_of_birth=current_user.get("date_of_birth"),
+        blood_type=current_user.get("blood_type"),
+        allergies=current_user.get("allergies"),
         created_at=current_user.get("created_at", datetime.utcnow())
     )
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
 @router.post("/change-password")
 async def change_password(
-    current_password: str,
-    new_password: str,
+    request: ChangePasswordRequest,
     current_user: dict = Depends(get_current_user)
 ):
     """
     Change user password
     """
     # Verify current password
-    if not verify_password(current_password, current_user.get("hashed_password", "")):
+    if not verify_password(request.current_password, current_user.get("hashed_password", "")):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect"
         )
     
     # Hash and update new password
-    new_hashed_password = get_password_hash(new_password)
+    new_hashed_password = get_password_hash(request.new_password)
     await user_db.update(current_user["id"], {"hashed_password": new_hashed_password})
     
     return {"message": "Password changed successfully"}
